@@ -25,7 +25,7 @@ const bot = new Bot<MyContext>(config.token)
 bot.use(session({ initial: () => ({ chat_id: 0, messages: [] as Message[] }) }))
 
 bot.on('msg', async ctx => {
-    console.log(ctx.msg)
+    console.log(ctx.session)
     let media: InputMedia | null = null
     if (ctx.msg.photo) {
         media = {
@@ -71,7 +71,11 @@ bot.on('msg', async ctx => {
                     messages: [media]
                 })
             }
+            return
         }
+
+        ctx.session.messages.push(media)
+        return
     }
     if (ctx.msg.text) {
         ctx.session.messages.push({
