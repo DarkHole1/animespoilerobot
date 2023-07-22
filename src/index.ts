@@ -45,7 +45,7 @@ bot.on('msg', async ctx => {
 
     if (ctx.msg.animation) {
         media = {
-            type: 'document',
+            type: 'animation',
             media: ctx.msg.animation.file_id,
             caption: ctx.msg.caption
         }
@@ -59,7 +59,7 @@ bot.on('msg', async ctx => {
         }
     }
 
-    if (media) {
+    if (media && media.type != 'animation') {
         if (ctx.msg.media_group_id) {
             const last = ctx.session.messages.slice(-1)[0]
             if (last && last.type == 'media_group' && last.media_group_id == ctx.msg.media_group_id) {
