@@ -72,8 +72,8 @@ bot.on('msg', async ctx => {
         }
     }
 
-    if (media && media.type != 'animation') {
-        if (ctx.msg.media_group_id) {
+    if (media) {
+        if (ctx.msg.media_group_id && media.type != 'animation') {
             const last = ctx.session.messages.slice(-1)[0]
             if (last && last.type == 'media_group' && last.media_group_id == ctx.msg.media_group_id) {
                 last.messages.push(media)
@@ -97,6 +97,8 @@ bot.on('msg', async ctx => {
         })
         return
     }
+
+    console.log(ctx.msg)
     await ctx.reply('Похоже ты мне отправил что-то странное')
 })
 
