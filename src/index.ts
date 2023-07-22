@@ -1,4 +1,5 @@
 import { Bot, Context, session, SessionFlavor } from "grammy"
+import { guard, isPrivateChat, reply } from "grammy-guard"
 import { InputMediaAudio, InputMedia, InputMediaDocument, InputMediaPhoto, InputMediaVideo } from "grammy/types"
 import { Config } from "./config"
 
@@ -26,7 +27,7 @@ type MyContext = Context & SessionFlavor<SessionData>
 const bot = new Bot<MyContext>(config.token)
 bot.use(session({ initial: (): SessionData => ({ phase: 'start', chat_id: 0, anime_id: 0, messages: [] }) }))
 
-bot.command('start', async ctx => {
+bot.command('start', guard(isPrivateChat, reply('Не, эта штука только в личных сообщениях работает')), async ctx => {
     ctx.session.phase = 'content'
     await ctx.reply('Приступаем к созданию спойлера. Отправляй мне всё - текст, картинки и гифки, а я это запомню на будущее. Когда решишь что достаточно, отправь /finish. А если передума - то /cancel')
 })
