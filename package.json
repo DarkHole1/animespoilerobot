@@ -6,5 +6,11 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6",
     "zod": "^3.21.4"
-  }
+  },
+  "name": "animespoilerobot",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "repository": "https://github.com/DarkHole1/animespoilerobot.git",
+  "author": "Dark Hole <dark.hole1@yandex.ru>",
+  "license": "MIT"
 }
