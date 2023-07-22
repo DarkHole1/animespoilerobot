@@ -26,7 +26,9 @@ const bot = new Bot<MyContext>(config.token)
 bot.use(session({ initial: (): SessionData => ({ enabled: false, chat_id: 0, messages: [] }) }))
 
 bot.command('finish', async ctx => {
-    console.log(ctx.session)
+    await sendMessages(ctx.chat.id, ctx.session.messages)
+    ctx.session.messages = []
+    ctx.session.enabled = false
 })
 
 bot.on('msg', async ctx => {
@@ -103,3 +105,41 @@ bot.on('msg', async ctx => {
 })
 
 bot.start()
+
+async function sendMessages(chat_id: number, messages: Message[]) {
+    for (const message of messages) {
+        switch (message.type) {
+            case 'animation':
+                await bot.api.sendAnimation(chat_id, message.media, {
+                    caption: message.caption
+                })
+                break
+            case 'audio':
+                await bot.api.sendAudio(chat_id, message.media, {
+                    caption: message.caption
+                })
+                break
+            case 'document':
+                await bot.api.sendDocument(chat_id, message.media, {
+                    caption: message.caption
+                })
+                break
+            case 'media_group':
+                await bot.api.sendMediaGroup(chat_id, message.messages)
+                break
+            case 'photo':
+                await bot.api.sendPhoto(chat_id, message.media, {
+                    caption: message.caption
+                })
+                break
+            case 'text':
+                await bot.api.sendMessage(chat_id, message.text)
+                break
+            case 'video':
+                await bot.api.sendVideo(chat_id, message.media, {
+                    caption: message.caption
+                })
+                break
+        }
+    }
+}
