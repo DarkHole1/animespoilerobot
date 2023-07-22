@@ -43,6 +43,14 @@ bot.on('msg', async ctx => {
         }
     }
 
+    if (ctx.msg.document) {
+        media = {
+            type: 'document',
+            media: ctx.msg.document.file_id,
+            caption: ctx.msg.caption
+        }
+    }
+
     if (ctx.msg.animation) {
         media = {
             type: 'animation',
