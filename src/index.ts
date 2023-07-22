@@ -16,13 +16,18 @@ type MediaGroup = {
 }
 
 interface SessionData {
+    enabled: boolean,
     chat_id: number,
     messages: Message[]
 }
 type MyContext = Context & SessionFlavor<SessionData>
 
 const bot = new Bot<MyContext>(config.token)
-bot.use(session({ initial: () => ({ chat_id: 0, messages: [] as Message[] }) }))
+bot.use(session({ initial: (): SessionData => ({ enabled: false, chat_id: 0, messages: [] }) }))
+
+bot.command('finish', async ctx => {
+    console.log(ctx.session)
+})
 
 bot.on('msg', async ctx => {
     console.log(ctx.session)
