@@ -16,23 +16,37 @@ type MediaGroup = {
 }
 
 interface SessionData {
-    enabled: boolean,
+    phase: 'start' | 'content' | 'title' | 'episode',
     chat_id: number,
+    anime_id: number
     messages: Message[]
 }
 type MyContext = Context & SessionFlavor<SessionData>
 
 const bot = new Bot<MyContext>(config.token)
-bot.use(session({ initial: (): SessionData => ({ enabled: false, chat_id: 0, messages: [] }) }))
+bot.use(session({ initial: (): SessionData => ({ phase: 'start', chat_id: 0, anime_id: 0, messages: [] }) }))
 
-bot.command('finish', async ctx => {
-    await sendMessages(ctx.chat.id, ctx.session.messages)
-    ctx.session.messages = []
-    ctx.session.enabled = false
+bot.command('start', async ctx => {
+    ctx.session.phase = 'content'
+    await ctx.reply('Приступаем к созданию спойлера. Отправляй мне всё - текст, картинки и гифки, а я это запомню на будущее. Когда решишь что достаточно, отправь /finish. А если передума - то /cancel')
 })
 
-bot.on('msg', async ctx => {
-    console.log(ctx.session)
+bot.command('cancel', async ctx => {
+    ctx.session.phase = 'start'
+    ctx.session.messages = []
+    ctx.session.chat_id = 0
+    ctx.session.anime_id = 0
+    await ctx.reply('Ну передумали так передумали чо бубнить то')
+})
+
+const contentPhase = bot.filter(ctx => ctx.session.phase == 'content')
+
+contentPhase.command('finish', async ctx => {
+    ctx.session.phase = 'title'
+    await ctx.reply('Отлично! Теперь отправь мне ссылку на тайтл на Шикимори (можешь воспользовать @radionoisebot)')
+})
+
+contentPhase.on('msg', async ctx => {
     let media: InputMedia | null = null
     if (ctx.msg.photo) {
         media = {
@@ -102,6 +116,31 @@ bot.on('msg', async ctx => {
 
     console.log(ctx.msg)
     await ctx.reply('Похоже ты мне отправил что-то странное')
+})
+
+bot.filter(ctx => ctx.session.phase == 'title').on('msg', async ctx => {
+    for (const entity of ctx.entities('url')) {
+        if (entity.text.startsWith('https://shikimori.me/animes/')) {
+            const anime_id = parseInt(entity.text.slice('https://shikimori.me/animes/'.length))
+            ctx.session.anime_id = anime_id
+            ctx.session.phase = 'episode'
+            await ctx.reply('А теперь выберите серию, к которой спойлер. Если вы хотите минимум ограничений, то можете написать 0')
+            return
+        }
+    }
+    await ctx.reply('Кажется в вашем сообщении нет ссылки на тайтл на Шики')
+})
+
+bot.filter(ctx => ctx.session.phase == 'episode').on('msg', async ctx => {
+    if (!ctx.msg.text) return
+    const match = ctx.msg.text.match(/^\d+$/)
+    if (!match) {
+        await ctx.reply('Похоже вы отправили не число. Попробуйте снова, мур')
+        return
+    }
+    const episode = parseInt(ctx.msg.text)
+    // TODO
+    await sendMessages(ctx.chat.id, ctx.session.messages)
 })
 
 bot.start()
