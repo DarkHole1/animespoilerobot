@@ -39,18 +39,18 @@ bot.command('cancel', async ctx => {
 })
 
 bot.on('inline_query', async ctx => {
-    if (typeof ctx.match == 'string' && ctx.match != '') {
-        const spoiler = spoilers.get(ctx.match)
+    if (ctx.inlineQuery.query != '') {
+        const spoiler = spoilers.get(ctx.inlineQuery.query)
         if (spoiler) {
             await ctx.answerInlineQuery([{
                 type: 'article',
-                id: ctx.match,
+                id: ctx.inlineQuery.query,
                 title: 'Отправить спойлер',
                 input_message_content: {
                     message_text: `Спойлеры к ${spoiler.episode} серии [${spoiler.anime_id}](https://shikimori.me/animes/${spoiler.anime_id})`,
                     parse_mode: 'MarkdownV2'
                 },
-                reply_markup: new InlineKeyboard().url('Открыть', `tg://${config.telegram.username}?start=${ctx.match}`)
+                reply_markup: new InlineKeyboard().url('Открыть', `https://t.me/${config.telegram.username}?start=${ctx.inlineQuery.query}`)
             }])
             return
         }
