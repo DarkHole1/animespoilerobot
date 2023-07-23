@@ -14,12 +14,21 @@ interface SessionData {
 }
 type MyContext = Context & SessionFlavor<SessionData>
 
-const bot = new Bot<MyContext>(config.token)
+const bot = new Bot<MyContext>(config.telegram.token)
 bot.use(session({ initial: (): SessionData => ({ phase: 'start', anime_id: 0, messages: [] }) }))
 
 bot.command('start', guard(isPrivateChat, reply('Не, эта штука только в личных сообщениях работает')), async ctx => {
-    ctx.session.phase = 'content'
-    await ctx.reply('Приступаем к созданию спойлера. Отправляй мне всё - текст, картинки и гифки, а я это запомню на будущее. Когда решишь что достаточно, отправь /finish. А если передума - то /cancel')
+    if (ctx.match == 'create' || ctx.match == '') {
+        ctx.session.phase = 'content'
+        await ctx.reply('Приступаем к созданию спойлера. Отправляй мне всё - текст, картинки и гифки, а я это запомню на будущее. Когда решишь что достаточно, отправь /finish. А если передума - то /cancel')
+        return
+    }
+    const spoiler = spoilers.get(ctx.match)
+    if (!spoiler) {
+        await ctx.reply('По вашему запросу ничего не найдено')
+        return
+    }
+    await sendMessages(ctx.chat.id, spoiler.messages)
 })
 
 bot.command('cancel', async ctx => {
@@ -30,6 +39,22 @@ bot.command('cancel', async ctx => {
 })
 
 bot.on('inline_query', async ctx => {
+    if (typeof ctx.match == 'string' && ctx.match != '') {
+        const spoiler = spoilers.get(ctx.match)
+        if (spoiler) {
+            await ctx.answerInlineQuery([{
+                type: 'article',
+                id: ctx.match,
+                title: 'Отправить спойлер',
+                input_message_content: {
+                    message_text: `Спойлеры к ${spoiler.episode} серии [${spoiler.anime_id}](https://shikimori.me/animes/${spoiler.anime_id})`,
+                    parse_mode: 'MarkdownV2'
+                },
+                reply_markup: new InlineKeyboard().url('Открыть', `tg://${config.telegram.username}?start=${ctx.match}`)
+            }])
+            return
+        }
+    }
     await ctx.answerInlineQuery([], {
         button: {
             text: 'Создать спойлер',

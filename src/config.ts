@@ -2,10 +2,13 @@ import { readFileSync } from "fs"
 import { RawConfig } from "./models/config"
 
 export class Config implements RawConfig {
-    token: string
+    telegram: {
+        token: string,
+        username: string
+    }
 
     private constructor(config: RawConfig) {
-        this.token = config.token
+        this.telegram = config.telegram
     }
 
     static loadSync(filename: string) {
