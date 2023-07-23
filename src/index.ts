@@ -1,31 +1,21 @@
-import { Bot, Context, session, SessionFlavor } from "grammy"
+import { Bot, Context, InlineKeyboard, session, SessionFlavor } from "grammy"
 import { guard, isPrivateChat, reply } from "grammy-guard"
-import { InputMediaAudio, InputMedia, InputMediaDocument, InputMediaPhoto, InputMediaVideo } from "grammy/types"
 import { Config } from "./config"
+import { Message, Spoilers } from "./spoilers"
+import { InputMedia } from "@grammyjs/types"
 
 const config = Config.loadSync('./config.json')
-
-type Message = MessageText | InputMedia | MediaGroup
-type MessageText = {
-    type: 'text',
-    text: string
-}
-type MediaGroup = {
-    type: 'media_group',
-    media_group_id: string
-    messages: (InputMediaAudio | InputMediaDocument | InputMediaPhoto | InputMediaVideo)[]
-}
+const spoilers = Spoilers.loadSync('./data/spoilers.json')
 
 interface SessionData {
     phase: 'start' | 'content' | 'title' | 'episode',
-    chat_id: number,
     anime_id: number
     messages: Message[]
 }
 type MyContext = Context & SessionFlavor<SessionData>
 
 const bot = new Bot<MyContext>(config.token)
-bot.use(session({ initial: (): SessionData => ({ phase: 'start', chat_id: 0, anime_id: 0, messages: [] }) }))
+bot.use(session({ initial: (): SessionData => ({ phase: 'start', anime_id: 0, messages: [] }) }))
 
 bot.command('start', guard(isPrivateChat, reply('Не, эта штука только в личных сообщениях работает')), async ctx => {
     ctx.session.phase = 'content'
@@ -35,7 +25,6 @@ bot.command('start', guard(isPrivateChat, reply('Не, эта штука тол�
 bot.command('cancel', async ctx => {
     ctx.session.phase = 'start'
     ctx.session.messages = []
-    ctx.session.chat_id = 0
     ctx.session.anime_id = 0
     await ctx.reply('Ну передумали так передумали чо бубнить то')
 })
@@ -48,7 +37,7 @@ contentPhase.command('finish', async ctx => {
 })
 
 contentPhase.on('msg', async ctx => {
-    let media: InputMedia | null = null
+    let media: InputMedia<never> | null = null
     if (ctx.msg.photo) {
         media = {
             type: 'photo',
@@ -140,8 +129,23 @@ bot.filter(ctx => ctx.session.phase == 'episode').on('msg', async ctx => {
         return
     }
     const episode = parseInt(ctx.msg.text)
-    // TODO
-    await sendMessages(ctx.chat.id, ctx.session.messages)
+    const spoiler_id = spoilers.create({
+        ...ctx.session,
+        episode
+    })
+    await spoilers.save('./data/spoilers.json')
+    await ctx.reply('Спойлер создан!', {
+        reply_markup: new InlineKeyboard().switchInline('Отправить спойлер', spoiler_id)
+    })
+})
+
+bot.on('inline_query', async ctx => {
+    await ctx.answerInlineQuery([], {
+        button: {
+            text: 'Создать спойлер',
+            start_parameter: `create:${ctx.from.id}`
+        }
+    })
 })
 
 bot.start()
