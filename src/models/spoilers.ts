@@ -3,7 +3,7 @@ import { number, z } from "zod"
 export const RawSpoilers = z.record(z.object({
     anime_id: z.number().int(),
     episode: z.number().int(),
-    messages: z.array(z.discriminatedUnion('type', [
+    messages: z.array(z.union([
         z.object({
             type: z.literal('text'),
             text: z.string()

@@ -29,6 +29,15 @@ bot.command('cancel', async ctx => {
     await ctx.reply('Ну передумали так передумали чо бубнить то')
 })
 
+bot.on('inline_query', async ctx => {
+    await ctx.answerInlineQuery([], {
+        button: {
+            text: 'Создать спойлер',
+            start_parameter: 'create'
+        }
+    })
+})
+
 const contentPhase = bot.filter(ctx => ctx.session.phase == 'content')
 
 contentPhase.command('finish', async ctx => {
@@ -136,15 +145,6 @@ bot.filter(ctx => ctx.session.phase == 'episode').on('msg', async ctx => {
     await spoilers.save('./data/spoilers.json')
     await ctx.reply('Спойлер создан!', {
         reply_markup: new InlineKeyboard().switchInline('Отправить спойлер', spoiler_id)
-    })
-})
-
-bot.on('inline_query', async ctx => {
-    await ctx.answerInlineQuery([], {
-        button: {
-            text: 'Создать спойлер',
-            start_parameter: `create:${ctx.from.id}`
-        }
     })
 })
 
