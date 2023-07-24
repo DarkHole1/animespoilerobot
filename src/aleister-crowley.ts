@@ -137,7 +137,7 @@ export function loggedIn(id: number) {
 }
 
 export function getRedirectUri(id: number, spoiler_id: string) {
-    const redirect_uri = new URL('https://animespoilerobot.darkhole.space/oauth')
+    const redirect_uri = new URL('https://animespoilero.darkhole.space/oauth')
     redirect_uri.searchParams.append('id', id.toString())
     redirect_uri.searchParams.append('spoiler_id', spoiler_id)
     return redirect_uri
