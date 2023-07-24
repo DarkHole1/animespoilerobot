@@ -169,8 +169,9 @@ contentPhase.on('msg', async ctx => {
 
 bot.filter(ctx => ctx.session.phase == 'title').on('msg', async ctx => {
     for (const entity of ctx.entities('url')) {
-        if (entity.text.startsWith('https://shikimori.me/animes/')) {
-            const anime_id = parseInt(entity.text.slice('https://shikimori.me/animes/'.length))
+        const match = entity.text.match(/^https:\/\/shikimori.me\/animes\/.+?(\d+).*$/)
+        if (match) {
+            const anime_id = parseInt(match[1])
             ctx.session.anime_id = anime_id
             ctx.session.phase = 'episode'
             await ctx.reply('А теперь выберите серию, к которой спойлер. Если вы хотите минимум ограничений, то можете написать 0')
