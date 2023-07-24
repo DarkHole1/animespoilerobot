@@ -202,7 +202,7 @@ const app = express()
 app.use(treeDiagram)
 app.use(express.static(path.resolve('static')))
 
-app.listen(9086)
+app.listen(9087)
 bot.start()
 
 async function sendMessages(chat_id: number, messages: Message[]) {
