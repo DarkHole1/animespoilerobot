@@ -193,6 +193,9 @@ bot.filter(ctx => ctx.session.phase == 'episode').on('msg', async ctx => {
         episode
     })
     await spoilers.save('./data/spoilers.json')
+    ctx.session.anime_id = 0
+    ctx.session.messages = []
+    ctx.session.phase = 'start'
     await ctx.reply('Спойлер создан!', {
         reply_markup: new InlineKeyboard().switchInline('Отправить спойлер', spoiler_id)
     })
