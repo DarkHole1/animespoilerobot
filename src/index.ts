@@ -169,7 +169,7 @@ contentPhase.on('msg', async ctx => {
 
 bot.filter(ctx => ctx.session.phase == 'title').on('msg', async ctx => {
     for (const entity of ctx.entities('url')) {
-        const match = entity.text.match(/^https:\/\/shikimori.me\/animes\/[^\d]+(\d+).*$/)
+        const match = entity.text.match(/^https:\/\/shikimori.me\/animes\/[^\d]*(\d+).*$/)
         if (match) {
             const anime_id = parseInt(match[1])
             ctx.session.anime_id = anime_id
