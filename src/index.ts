@@ -1,10 +1,13 @@
 import { Bot, Context, InlineKeyboard, session, SessionFlavor } from "grammy"
 import { guard, isPrivateChat, reply } from "grammy-guard"
-import { Config } from "./config"
 import { Message, Spoilers } from "./spoilers"
 import { InputMedia } from "@grammyjs/types"
+import { config } from "./config"
+import { getAuthorizedAPI, getOAuthUrl, loggedIn, treeDiagram } from "./aleister-crowley"
+import express from 'express'
+import path from 'path'
 
-const config = Config.loadSync('./config.json')
+
 const spoilers = Spoilers.loadSync('./data/spoilers.json')
 
 interface SessionData {
@@ -28,7 +31,29 @@ bot.command('start', guard(isPrivateChat, reply('Не, эта штука тол�
         await ctx.reply('По вашему запросу ничего не найдено')
         return
     }
-    await sendMessages(ctx.chat.id, spoiler.messages)
+    try {
+        const api = await getAuthorizedAPI(ctx.from!.id)
+        if (!api) {
+            await ctx.reply('Сначала надо авторизироваться', {
+                reply_markup: new InlineKeyboard().url('Войти в Шикимори', getOAuthUrl(ctx.from!.id, ctx.match).toString())
+            })
+            return
+        }
+        const me = await api.users.whoami()
+        if (!me) {
+            return
+        }
+        const rate = await api.userRates.get({
+            user_id: me.id,
+            target_id: spoiler.anime_id,
+            target_type: 'Anime'
+        })
+        if (rate.length <= 0 || !rate[0].episodes || rate[0].episodes < spoiler.episode) {
+            await ctx.reply('Вы ещё не посмотрели этот эпизод')
+            return
+        }
+        await sendMessages(ctx.chat.id, spoiler.messages)
+    } catch (e) { }
 })
 
 bot.command('cancel', async ctx => {
@@ -173,6 +198,11 @@ bot.filter(ctx => ctx.session.phase == 'episode').on('msg', async ctx => {
     })
 })
 
+const app = express()
+app.use(treeDiagram)
+app.use(express.static(path.resolve('static')))
+
+app.listen(9086)
 bot.start()
 
 async function sendMessages(chat_id: number, messages: Message[]) {
