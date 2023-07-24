@@ -18,7 +18,7 @@ treeDiagram.get('/oauth', async (req, res) => {
     if (!req.query.code || typeof req.query.code != 'string') {
         return res.redirect('/')
     }
-    if (!req.query.id || typeof req.query.id != 'string') {
+    if (!req.query.id || typeof req.query.id != 'string' || !req.query.spoiler_id || typeof req.query.spoiler_id != 'string') {
         return res.redirect('/wrong.html')
     }
 
@@ -29,7 +29,7 @@ treeDiagram.get('/oauth', async (req, res) => {
     form.append('client_id', config.shiki.client_id)
     form.append('client_secret', config.shiki.client_secret)
     form.append('code', code)
-    form.append('redirect_uri', getRedirectUri(parseInt(id), spoiler_id!.toString()))
+    form.append('redirect_uri', getRedirectUri(parseInt(id), spoiler_id))
 
     console.log('Start fetching token')
     const response = await axios.post(
