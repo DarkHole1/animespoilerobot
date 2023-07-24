@@ -29,7 +29,7 @@ treeDiagram.get('/oauth', async (req, res) => {
     form.append('client_id', config.shiki.client_id)
     form.append('client_secret', config.shiki.client_secret)
     form.append('code', code)
-    form.append('redirect_uri', getRedirectUri(parseInt(id), spoiler_id))
+    form.append('redirect_uri', getRedirectUri(parseInt(id), spoiler_id).toString())
 
     console.log('Start fetching token')
     const response = await axios.post(
